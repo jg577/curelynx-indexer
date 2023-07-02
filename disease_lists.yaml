@@ -1,0 +1,148 @@
+TOP_100_RARE_DISEASES:
+    - Achondroplasia
+    - Alkaptonuria
+    - Alzheimer's Disease Early-Onset
+    - Amyotrophic Lateral Sclerosis
+    - Angelman Syndrome
+    - Apert Syndrome
+    - Ataxia Telangiectasia
+    - Bardet-Biedl Syndrome
+    - Batten Disease
+    - Becker's Muscular Dystrophy
+    - Behcet's Disease
+    - Bloom Syndrome
+    - Canavan Disease
+    - Carcinoid Syndrome
+    - Charcot-Marie-Tooth Disease
+    - Chediak-Higashi Syndrome
+    - Chiari Malformation
+    - Churg-Strauss Syndrome
+    - Coffin-Lowry Syndrome
+    - Congenital Adrenal Hyperplasia
+    - Congenital Central Hypoventilation Syndrome
+    - Crigler-Najjar Syndrome
+    - Cronkhite-Canada Syndrome
+    - Crouzon Syndrome
+    - Cushing's Syndrome
+    - Cystinosis
+    - Dercum's Disease
+    - Dermatomyositis
+    - Dravet Syndrome
+    - Duchenne Muscular Dystrophy
+    - Ehlers-Danlos Syndrome
+    - Epidermolysis Bullosa
+    - Erdheim-Chester Disease
+    - Fabry Disease
+    - Fanconi Anemia
+    - Farber Disease
+    - Fibrodysplasia Ossificans Progressiva
+    - Fragile X Syndrome
+    - Friedreich's Ataxia
+    - Gaucher Disease
+    - Giant Cell Arteritis
+    - Gilbert's Syndrome
+    - Gitelman Syndrome
+    - Goodpasture Syndrome
+    - Gorlin Syndrome
+    - Guillain-Barre Syndrome
+    - Hemochromatosis
+    - Hemophilia
+    - Hereditary Angioedema
+    - Hereditary Spastic Paraplegia
+    - Huntington's Disease
+    - Hyper IgM Syndrome
+    - Hyperoxaluria and Oxalosis
+    - Hypoparathyroidism
+    - Kabuki Syndrome
+    - Kawasaki Disease
+    - Klippel-Trenaunay Syndrome
+    - Krabbe Disease
+    - Lambert-Eaton Syndrome
+    - Landau-Kleffner Syndrome
+    - Leigh's Disease
+    - Lennox-Gastaut Syndrome
+    - Lesch-Nyhan Syndrome
+    - Lissencephaly
+    - Lowe Syndrome
+    - Lupus
+    - Lyme Disease
+    - Lymphangioleiomyomatosis
+    - Machado-Joseph Disease
+    - Maple Syrup Urine Disease
+    - Marfan Syndrome
+    - Menkes Disease
+    - Microscopic Polyangiitis
+    - Moebius Syndrome
+    - Mucopolysaccharidoses
+    - Multiple System Atrophy
+    - Myasthenia Gravis
+    - Myotonic Dystrophy
+    - Narcolepsy
+    - Neurofibromatosis
+    - Neuromyelitis Optica
+    - Niemann-Pick Disease
+    - Osteogenesis Imperfecta
+    - Paraneoplastic Pemphigus
+    - Paroxysmal Nocturnal Hemoglobinuria
+    - Peyronie's Disease
+    - Polycythemia Vera
+    - Pompe Disease
+    - Porphyria
+    - Prader-Willi Syndrome
+    - Pseudomyxoma Peritonei
+    - Pulmonary Fibrosis
+    - Reflex Sympathetic Dystrophy Syndrome
+    - Retinitis Pigmentosa
+    - Rett Syndrome
+    - Rubinstein-Taybi Syndrome
+    - Sarcoidosis
+    - Schindler Disease
+    - Scleroderma
+    - Shy-Drager Syndrome
+    - Sjogren's Syndrome
+    - Stiff-Person Syndrome
+    - Sturge-Weber Syndrome
+    - Takayasu Arteritis
+    - Tay-Sachs Disease
+    - Tourette Syndrome
+    - Von Hippel-Lindau Disease
+    - Wilson's Disease
+
+MOST_POP_TRIAL_DISEASES:
+    - Breast Cancer
+    - Lung Cancer
+    - Colorectal Cancer
+    - Prostate Cancer
+    - Melanoma
+    - Leukemia
+    - Non-Hodgkin Lymphoma
+    - Pancreatic Cancer
+    - Ovarian Cancer
+    - Liver Cancer
+    - Gastric Cancer
+    - Esophageal Cancer
+    - Cardiovascular Disease
+    - Hypertension
+    - Coronary Artery Disease
+    - Heart Failure
+    - Stroke
+    - Diabetes Mellitus Type 2
+    - Diabetes Mellitus Type 1
+    - Obesity
+    - Chronic Kidney Disease
+    - Asthma
+    - COPD (Chronic Obstructive Pulmonary Disease)
+    - Rheumatoid Arthritis
+    - Osteoarthritis
+    - Alzheimer's Disease
+    - Parkinson's Disease
+    - Multiple Sclerosis
+    - Epilepsy
+    - Depression
+    - Schizophrenia
+    - Bipolar Disorder
+    - Anxiety Disorders
+    - HIV/AIDS
+    - Hepatitis C
+    - Hepatitis B
+    - Influenza

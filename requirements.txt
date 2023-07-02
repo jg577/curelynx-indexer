@@ -1,0 +1,10 @@
+
+docutils==0.20.1
+llama_index==0.6.16.post1
+numpy==1.24.2
+Pillow==9.5.0
+pinecone-client[grpc]
+click
+tqdm
+pymongo
+tiktoken
