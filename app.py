@@ -154,6 +154,21 @@ def check_and_insert_document(
         return False
 
 
+def upsert_docs(texts, metadatas, index):
+    ids = [str(uuid4()) for _ in range(len(texts))]
+    logging.info(f"Adding {ids} documents to the index")
+    try:
+        embeds = openai_emb_service.embed_documents(texts)
+        # logging.info(f"embeddings: {embeds}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    try:
+        response = index.upsert(vectors=zip(ids, embeds, metadatas))
+        print(response)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 def add_documents_to_index(
     documents: List[dict],
 ) -> None:
@@ -185,20 +200,12 @@ def add_documents_to_index(
         metadatas.extend(record_metadatas)
         # if we have reached the batch_limit we can add texts
         if len(texts) >= batch_limit:
-            ids = [str(uuid4()) for _ in range(len(texts))]
-            logging.info(f"Adding {ids} documents to the index")
-            try:
-                embeds = openai_emb_service.embed_documents(texts)
-                logging.info(f"embeddings: {embeds}")
-            except Exception as e:
-                print(f"An error occurred: {e}")
-            try:
-                response = index.upsert(vectors=zip(ids, embeds, metadatas))
-                print(response)
-            except Exception as e:
-                print(f"An error occurred: {e}")
+            upsert_docs(texts, metadatas, index)
             texts = []
             metadatas = []
+
+    # Do it one final time outside of batch limit conditions
+    upsert_docs(texts, metadatas, index)
 
 
 def get_clinical_trials_full_documents(disease_name) -> List[dict]:
