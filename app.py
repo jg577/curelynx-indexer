@@ -128,7 +128,7 @@ def check_and_insert_document(
     document: dict,
     mongodb_client=mongodb_client,
     database_name="curelynx",
-    collection="clinical_trials_v1",
+    collection=PINECONE_INDEX_NAME,
 ) -> bool:
     """
     Takes in a mongodb database, collection name, and a document
@@ -303,7 +303,7 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
     logging.info(f"reached get documents from NCT")
     documents = []
     url = "https://clinicaltrials.gov/api/query/study_fields"
-    search_expr = f"{disease_name} AND (Status:Recruiting OR Status:Not+yet+recruiting)"
+    search_expr = f"{disease_name}"
     fields = [
         "NCTId",
         "Condition",
@@ -314,32 +314,36 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
         "EligibilityCriteria",
         "InterventionDescription",
         "PrimaryOutcomeDescription",
+        "OverallStatus",
     ]
     responses_dict = get_data_with_timeout(url, search_expr, fields)
     if responses_dict["StudyFieldsResponse"]["NStudiesReturned"] > 0:
         for r in responses_dict["StudyFieldsResponse"]["StudyFields"]:
-            doc = {}
-            doc["NCTId"] = r["NCTId"][0] if r.get("NCTId") else ""
-            doc["condition"] = r["Condition"][0] if r.get("Condition") else ""
-            doc["location"] = r["LocationCity"][0] if r.get("LocationCity") else ""
-            doc["title"] = r["OfficialTitle"][0] if r.get("OfficialTitle") else ""
-            doc["organization"] = r["OrgFullName"][0] if r.get("OrgFullName") else ""
-            summary = r["BriefSummary"] if r.get("BriefSummary") else ""
-            criteria = r["EligibilityCriteria"] if r.get("EligibilityCriteria") else ""
-            primary_outcome = (
-                r["PrimaryOutcomeDescription"]
-                if r.get("PrimaryOutcomeDescription")
-                else ""
-            )
-            interventions = (
-                r["InterventionDescription"] if r.get("InterventionDescription") else ""
-            )
-            doc[
-                "text"
-            ] = f"ID: {doc['NCTId']}. The trial is for patients suffering from {doc['condition']}. The trial is located at {doc['location']}. The trial is organized by {doc['organization']}. The title of the trial is {doc['title']}. Summary of the trial is as follows: {summary} {criteria}. The primary outcome is as follows:{primary_outcome}. The medical intervention for the trial are as follows: {interventions}".replace(
-                "\n", ""
-            )
-            documents.append(doc)
+            if r["OverallStatus"][0] in ["Recruiting", "Not yet recruiting"]:
+                doc = {}
+                doc["NCTId"] = r["NCTId"][0] if r.get("NCTId") else ""
+                doc["condition"] = r["Condition"][0] if r.get("Condition") else ""
+                doc["location"] = r["LocationCity"][0] if r.get("LocationCity") else ""
+                doc["title"] = r["OfficialTitle"][0] if r.get("OfficialTitle") else ""
+                doc["organization"] = r["OrgFullName"][0] if r.get("OrgFullName") else ""
+                summary = r["BriefSummary"] if r.get("BriefSummary") else ""
+                criteria = r["EligibilityCriteria"] if r.get("EligibilityCriteria") else ""
+                primary_outcome = (
+                    r["PrimaryOutcomeDescription"]
+                    if r.get("PrimaryOutcomeDescription")
+                    else ""
+                )
+                interventions = (
+                    r["InterventionDescription"] if r.get("InterventionDescription") else ""
+                )
+                doc[
+                    "text"
+                ] = f"ID: {doc['NCTId']}. The trial is for patients suffering from {doc['condition']}. The trial is located at {doc['location']}. The trial is organized by {doc['organization']}. The title of the trial is {doc['title']}. Summary of the trial is as follows: {summary} {criteria}. The primary outcome is as follows:{primary_outcome}. The medical intervention for the trial are as follows: {interventions}".replace(
+                    "\n", ""
+                )
+                documents.append(doc)
+            else:
+                logging.debug(f"Skipping, OverallStatus={r['OverallStatus'][0]}")
     return documents
 
 
@@ -371,7 +375,7 @@ def main(disease_file) -> None:
     for disease_name in all_diseases:
         logging.info(f"Getting all the relevant clinical trials for {disease_name}")
         documents = get_documents_from_NCT(disease_name)
-        filtered_documents = filter_docs_for_indexing(documents, "clinical_trials_v1")
+        filtered_documents = filter_docs_for_indexing(documents, PINECONE_INDEX_NAME)
 
         # Adding the documents into the index
         if filtered_documents:
