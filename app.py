@@ -319,6 +319,7 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
     responses_dict = get_data_with_timeout(url, search_expr, fields)
     if responses_dict["StudyFieldsResponse"]["NStudiesReturned"] > 0:
         for r in responses_dict["StudyFieldsResponse"]["StudyFields"]:
+            # TODO: Does this approach work with the popular diseases
             if r["OverallStatus"][0] in ["Recruiting", "Not yet recruiting"]:
                 doc = {}
                 doc["NCTId"] = r["NCTId"][0] if r.get("NCTId") else ""
