@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import json
 from typing import List, Optional
@@ -20,7 +21,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME")
+EMBEDDING_MODEL_NAME = os.environ.get("OPENAI_EMBEDDING_MODEL_NAME")
 OPENAI_ORGANIZATION = os.environ.get("OPENAI_ORGANIZATION")
 PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME")
 MONGODB_CONNECTION_STRING = os.environ.get("MONGODB_CONNECTION_STRING")
@@ -302,9 +303,7 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
     logging.info(f"reached get documents from NCT")
     documents = []
     url = "https://clinicaltrials.gov/api/query/study_fields"
-    search_expr = urllib.parse.quote_plus(
-        f"{disease_name} AND (Status:Recruiting OR Status:Not+yet+recruiting)"
-    )
+    search_expr = f"{disease_name} AND (Status:Recruiting OR Status:Not+yet+recruiting)"
     fields = [
         "NCTId",
         "Condition",
