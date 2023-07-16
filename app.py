@@ -161,12 +161,12 @@ def upsert_docs(texts, metadatas, index):
         embeds = openai_emb_service.embed_documents(texts)
         # logging.info(f"embeddings: {embeds}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred during embedding API request: {e}")
     try:
         response = index.upsert(vectors=zip(ids, embeds, metadatas))
         print(response)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in vector db upsert: {e}")
 
 
 def add_documents_to_index(
@@ -226,7 +226,7 @@ def get_clinical_trials_full_documents(disease_name) -> List[dict]:
     params = {
         "expr": f"{disease_name} AND (Status:Recruiting OR Status:Not+yet+recruiting)",  # the search term with overall status
         "min_rnk": 1,
-        "max_rnk": 100,
+        "max_rnk": 1000,
         "fmt": "json",  # get the response in json format
     }
     # Send the GET request
@@ -303,7 +303,7 @@ def get_data_with_timeout(url, search_expr, fields):
     except requests.RequestException as err:
         print(f"Error occurred: {err}")
     except Exception as err:
-        print(f"An error occurred: {err}")
+        print(f"An error occurred in clinical trials API request: {err}")
 
 
 def get_documents_from_NCT(disease_name) -> List[dict]:
@@ -373,7 +373,7 @@ def main(disease_file) -> None:
     logging.info("Instantiating the vector store index")
     # dimensions are for text-embedding-ada-002
     # using pinecone indices: https://docs.pinecone.io/docs/langchain
-    metadata_config = {"indexed": ["condition"]}
+    metadata_config = {"indexed": ["Condition"]}
     instantiate_pinecone_index(
         dimension=1536,
         metadata_config=metadata_config,
