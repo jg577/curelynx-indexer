@@ -24,6 +24,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 EMBEDDING_MODEL_NAME = os.environ.get("OPENAI_EMBEDDING_MODEL_NAME")
 OPENAI_ORGANIZATION = os.environ.get("OPENAI_ORGANIZATION")
 PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME")
+PINECONE_ENVIRONMENT = os.environ.get("PINECONE_ENVIRONMENT")
 MONGODB_CONNECTION_STRING = os.environ.get("MONGODB_CONNECTION_STRING")
 
 openai_emb_service = OpenAIEmbeddings(
@@ -32,8 +33,13 @@ openai_emb_service = OpenAIEmbeddings(
     openai_organization=OPENAI_ORGANIZATION,
 )
 
-mongodb_client = MongoClient(MONGODB_CONNECTION_STRING)
-
+mongodb_client = MongoClient(MONGODB_CONNECTION_STRING, server_api=ServerApi("1"))
+# Send a ping to confirm a successful connection
+# try:
+#     mongodb_client.admin.command("ping")
+#     print("Pinged your deployment. You successfully connected to MongoDB!")
+# except Exception as e:
+#     print(e)
 tokenizer = tiktoken.get_encoding("p50k_base")
 
 
@@ -49,18 +55,12 @@ text_splitter = RecursiveCharacterTextSplitter(
     length_function=tiktoken_len,
     separators=["\n\n", "\n", " ", ""],
 )
-# Send a ping to confirm a successful connection
-try:
-    mongodb_client.admin.command("ping")
-    logging.info("Pinged the deployment. Successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
 
 
 def user_query(data: dict, pinecone_index_name: str = PINECONE_INDEX_NAME):
     query_text = data["question"]
     question_embedding = openai_emb_service.embed_query(query_text)
-    pinecone.init(api_key=PINECONE_API_KEY, environment="asia-southeast1-gcp-free")
+    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
     index = pinecone.GRPCIndex(pinecone_index_name)
     result = index.query(
         vector=question_embedding,
@@ -113,7 +113,7 @@ def instantiate_pinecone_index(
     logging.info(
         f"Initializing pinecone index for {index_name} with  \n{metadata_config}"
     )
-    pinecone.init(api_key=PINECONE_API_KEY, environment="asia-southeast1-gcp-free")
+    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
     if index_name not in pinecone.list_indexes():
         pinecone.create_index(
             name=PINECONE_INDEX_NAME,
@@ -157,11 +157,8 @@ def check_and_insert_document(
 def upsert_docs(texts, metadatas, index):
     ids = [str(uuid4()) for _ in range(len(texts))]
     logging.info(f"Adding {ids} documents to the index")
-    try:
-        embeds = openai_emb_service.embed_documents(texts)
-        # logging.info(f"embeddings: {embeds}")
-    except Exception as e:
-        print(f"An error occurred during embedding API request: {e}")
+    embeds = openai_emb_service.embed_documents(texts)
+    # logging.info(f"embeddings: {embeds}")
     try:
         response = index.upsert(vectors=zip(ids, embeds, metadatas))
         print(response)
@@ -184,10 +181,12 @@ def add_documents_to_index(
         text = record["text"]
         record_metadata = {
             "NCTId": record["NCTId"],
-            "Condition": record["condition"],
-            "Location": record["location"],
-            "Title": record["title"],
-            "Organization": record["organization"],
+            "condition": record["condition"],
+            "city": record["city"],
+            "state": record["state"],
+            "country": record["country"],
+            "title": record["title"],
+            "organization": record["organization"],
             "text": text,
         }
         record_texts = text_splitter.split_text(text)
@@ -252,11 +251,12 @@ def get_clinical_trials_full_documents(disease_name) -> List[dict]:
                 document["organization"] = doc["Study"]["ProtocolSection"][
                     "IdentificationModule"
                 ]["Organization"]["OrgFullName"]
-                if check_and_insert_document(document):
-                    documents.append(document)
-                    logging.info(
-                        f"Added document for {document['NCTId']} to the list for index"
-                    )
+                documents.append(document)
+                # if check_and_insert_document(document):
+                #     documents.append(document)
+                #     logging.info(
+                #         f"Added document for {document['NCTId']} to the list for index"
+                #     )
             except Exception as e:
                 logging.info(f"Skipping doc for {str(e)}")
     return documents
@@ -272,13 +272,15 @@ def filter_docs_for_indexing(
     """
     filtered_docs = []
     for doc in documents:
-        if check_and_insert_document(doc, collection=mongodb_collection_name):
-            filtered_docs.append(doc)
-            logging.info(f"Added document for {doc['NCTId']} to the list for index")
-        else:
-            logging.info(
-                f"Skipping doc name {doc['NCTId']} as it already exists in the collection"
-            )
+        filtered_docs.append(doc)
+        logging.info(f"Added document for {doc['NCTId']} to the list for index")
+        # if check_and_insert_document(doc, collection=mongodb_collection_name):
+        #     filtered_docs.append(doc)
+        #     logging.info(f"Added document for {doc['NCTId']} to the list for index")
+        # else:
+        #     logging.info(
+        #         f"Skipping doc name {doc['NCTId']} as it already exists in the collection"
+        #     )
     return filtered_docs
 
 
@@ -315,6 +317,8 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
         "NCTId",
         "Condition",
         "LocationCity",
+        "LocationState",
+        "LocationCountry",
         "OfficialTitle",
         "OrgFullName",
         "BriefSummary",
@@ -331,22 +335,32 @@ def get_documents_from_NCT(disease_name) -> List[dict]:
                 doc = {}
                 doc["NCTId"] = r["NCTId"][0] if r.get("NCTId") else ""
                 doc["condition"] = r["Condition"][0] if r.get("Condition") else ""
-                doc["location"] = r["LocationCity"][0] if r.get("LocationCity") else ""
+                doc["city"] = r["LocationCity"][0] if r.get("LocationCity") else ""
+                doc["state"] = r["LocationState"][0] if r.get("LocationState") else ""
+                doc["country"] = (
+                    r["LocationCountry"][0] if r.get("LocationCountry") else ""
+                )
                 doc["title"] = r["OfficialTitle"][0] if r.get("OfficialTitle") else ""
-                doc["organization"] = r["OrgFullName"][0] if r.get("OrgFullName") else ""
+                doc["organization"] = (
+                    r["OrgFullName"][0] if r.get("OrgFullName") else ""
+                )
                 summary = r["BriefSummary"] if r.get("BriefSummary") else ""
-                criteria = r["EligibilityCriteria"] if r.get("EligibilityCriteria") else ""
+                criteria = (
+                    r["EligibilityCriteria"] if r.get("EligibilityCriteria") else ""
+                )
                 primary_outcome = (
                     r["PrimaryOutcomeDescription"]
                     if r.get("PrimaryOutcomeDescription")
                     else ""
                 )
                 interventions = (
-                    r["InterventionDescription"] if r.get("InterventionDescription") else ""
+                    r["InterventionDescription"]
+                    if r.get("InterventionDescription")
+                    else ""
                 )
                 doc[
                     "text"
-                ] = f"ID: {doc['NCTId']}. The trial is for patients suffering from {doc['condition']}. The trial is located at {doc['location']}. The trial is organized by {doc['organization']}. The title of the trial is {doc['title']}. Summary of the trial is as follows: {summary} {criteria}. The primary outcome is as follows:{primary_outcome}. The medical intervention for the trial are as follows: {interventions}".replace(
+                ] = f"ID: {doc['NCTId']}. The trial is for patients suffering from {doc['condition']}. The trial is located at {doc['city']}, {doc['state']}, {doc['country']}. The trial is organized by {doc['organization']}. The title of the trial is {doc['title']}. Summary of the trial is as follows: {summary} {criteria}. The primary outcome is as follows:{primary_outcome}. The medical intervention for the trial are as follows: {interventions}".replace(
                     "\n", ""
                 )
                 documents.append(doc)
@@ -373,13 +387,13 @@ def main(disease_file) -> None:
     logging.info("Instantiating the vector store index")
     # dimensions are for text-embedding-ada-002
     # using pinecone indices: https://docs.pinecone.io/docs/langchain
-    metadata_config = {"indexed": ["Condition"]}
+    metadata_config = {"indexed": ["condition", "city", "state", "country"]}
     instantiate_pinecone_index(
         dimension=1536,
         metadata_config=metadata_config,
     )
     # querying  clinical trials
-    all_diseases = top_rare_diseases + most_pop_trial_diseases
+    all_diseases = most_pop_trial_diseases + top_rare_diseases
     for disease_name in all_diseases:
         logging.info(f"Getting all the relevant clinical trials for {disease_name}")
         documents = get_documents_from_NCT(disease_name)
